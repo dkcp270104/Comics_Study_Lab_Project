@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useAuth } from "../context/useAuth.js";
 
 export default function Signup() {
   const [form, setForm] = useState({
@@ -8,14 +9,27 @@ export default function Signup() {
     email: "",
     password: "",
   });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { signup } = useAuth();
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(form);
-    alert("Signup successful!");
+    setError("");
+    setLoading(true);
+
+    signup(form)
+      .then(() => {
+        navigate("/comics");
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -32,6 +46,12 @@ export default function Signup() {
               Set up your profile so we can share comic picks made just for you.
             </p>
           </div>
+
+          {error && (
+            <div className="mb-5 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {error}
+            </div>
+          )}
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-slate-200 mb-2">Name</label>
@@ -71,9 +91,10 @@ export default function Signup() {
 
           <button
             type="submit"
-            className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-semibold py-2.5 rounded-lg transition"
+            disabled={loading}
+            className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition"
           >
-            Create account
+            {loading ? "Creating account..." : "Create account"}
           </button>
 
           <p className="text-center text-sm text-slate-400 mt-6">

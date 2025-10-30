@@ -1,15 +1,29 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useAuth } from "../context/useAuth.js";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log({ email, password });
-    alert("Logged in successfully!");
+    setError("");
+    setLoading(true);
+
+    login({ email, password })
+      .then(() => {
+        navigate("/comics");
+      })
+      .catch((err) => {
+        setError(err.message);
+      })
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -23,9 +37,15 @@ export default function Login() {
           <div className="mb-8 text-center">
             <h2 className="text-3xl font-bold text-white">Welcome back</h2>
             <p className="text-slate-400 text-sm mt-2">
-              Sign in to keep up with the newest issues and store events.
+              Sign in to keep up with the latest releases and shop events.
             </p>
           </div>
+
+          {error && (
+            <div className="mb-5 rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+              {error}
+            </div>
+          )}
 
           <div className="mb-5">
             <label className="block text-sm font-medium text-slate-200 mb-2">
@@ -55,9 +75,10 @@ export default function Login() {
 
           <button
             type="submit"
-            className="w-full bg-indigo-500 hover:bg-indigo-400 text-white font-semibold py-2.5 rounded-lg transition"
+            disabled={loading}
+            className="w-full bg-indigo-500 hover:bg-indigo-400 disabled:opacity-60 text-white font-semibold py-2.5 rounded-lg transition"
           >
-            Login
+            {loading ? "Logging in..." : "Login"}
           </button>
 
           <p className="text-center text-sm text-slate-400 mt-6">

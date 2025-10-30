@@ -1,9 +1,28 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
-import { featuredComics, quickLinks } from "../data/comics";
+import { quickLinks } from "../data/comics";
+import { apiRequest, getApiUrl } from "../services/api";
+import { useAuth } from "../context/useAuth.js";
 
 export default function Home() {
+  const { user } = useAuth();
+  const isLoggedIn = Boolean(user);
+  const isAdmin = user?.role === "admin";
+  const [featured, setFeatured] = useState([]);
+  const [error, setError] = useState("");
+  const apiBase = useMemo(() => getApiUrl(), []);
+
+  useEffect(() => {
+    apiRequest("/api/comics")
+      .then((data) => {
+        setFeatured(data.slice(0, 4));
+      })
+      .catch(() => {
+        setError("Could not load books right now.");
+      });
+  }, []);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <Navbar />
@@ -22,36 +41,76 @@ export default function Home() {
               feels personal. We hand-pick every title so it is easy for you to dive in.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link
-                to="/signup"
-                className="inline-flex justify-center items-center rounded-md bg-white text-indigo-700 font-semibold px-6 py-3 shadow-md hover:bg-blue-100 transition"
-              >
-                Create your free account
-              </Link>
-              <Link
-                to="/login"
-                className="inline-flex justify-center items-center rounded-md border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10 transition"
-              >
-                Sign in instead
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link
+                    to="/comics"
+                    className="inline-flex justify-center items-center rounded-md bg-white text-indigo-700 font-semibold px-6 py-3 shadow-md hover:bg-blue-100 transition"
+                  >
+                    Browse the full catalog
+                  </Link>
+                  <Link
+                    to={isAdmin ? "/comics#admin-form" : "/contact"}
+                    className="inline-flex justify-center items-center rounded-md border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10 transition"
+                  >
+                    {isAdmin ? "Add a new book" : "Join community events"}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/signup"
+                    className="inline-flex justify-center items-center rounded-md bg-white text-indigo-700 font-semibold px-6 py-3 shadow-md hover:bg-blue-100 transition"
+                  >
+                    Create your free account
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="inline-flex justify-center items-center rounded-md border border-white/40 px-6 py-3 font-semibold text-white hover:bg-white/10 transition"
+                  >
+                    Sign in instead
+                  </Link>
+                </>
+              )}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4 lg:w-1/2">
-            {featuredComics.map((item) => (
-              <div
-                key={item.title}
-                className={`h-44 rounded-xl bg-gradient-to-br ${item.colors} p-4 shadow-lg flex flex-col justify-between`}
-              >
-                <div>
-                  <span className="text-xs uppercase tracking-wide text-white/70">
-                    {item.issue}
-                  </span>
-                  <h3 className="text-xl font-bold">{item.title}</h3>
-                </div>
-                <p className="text-white/80 text-sm">{item.blurb}</p>
+            {error ? (
+              <div className="col-span-2 rounded-xl bg-white/10 p-6 text-sm text-white/80">
+                {error}
               </div>
-            ))}
+            ) : featured.length === 0 ? (
+              <div className="col-span-2 rounded-xl bg-white/10 p-6 text-sm text-white/80">
+                Add books from the admin account to see them here.
+              </div>
+            ) : (
+              featured.map((item) => (
+                <div
+                  key={item._id}
+                  className={`rounded-xl bg-slate-950/30 p-4 shadow-lg flex flex-col gap-3`}
+                >
+                  {item.coverImageUrl ? (
+                    <img
+                      src={`${apiBase}${item.coverImageUrl}`}
+                      alt={item.title}
+                      className="h-24 w-full rounded-lg object-cover"
+                    />
+                  ) : (
+                    <div className={`h-24 rounded-lg bg-gradient-to-br ${item.coverColor || "from-indigo-500 to-purple-500"}`} />
+                  )}
+                  <div>
+                    <span className="text-xs uppercase tracking-wide text-white/70">
+                      {item.edition}
+                    </span>
+                    <h3 className="text-xl font-bold">{item.title}</h3>
+                  </div>
+                  <p className="text-white/80 text-sm">
+                    {item.description || "A fresh pick from our shelves."}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>
@@ -71,7 +130,7 @@ export default function Home() {
       </section>
 
       <section className="max-w-5xl mx-auto px-6 py-16 text-center">
-        <h2 className="text-3xl font-bold mb-4">Ready for more issues?</h2>
+    <h2 className="text-3xl font-bold mb-4">Ready for more stories?</h2>
         <p className="text-slate-400 mb-8">
           Jump into our full catalog to explore fresh series, indie gems, and classic reprints. Your next favorite arc is waiting.
         </p>
