@@ -10,7 +10,7 @@ export default function Navbar() {
     <header className="border-b border-white/5 bg-slate-950/80 backdrop-blur sticky top-0 z-40">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="text-lg font-semibold text-indigo-300">
-          Panel Planet
+         Comic study lab IIT Jodhpur
         </Link>
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-200">
           <Link to="/" className="hover:text-indigo-300 transition">
